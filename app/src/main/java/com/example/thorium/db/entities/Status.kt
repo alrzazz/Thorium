@@ -3,19 +3,19 @@ package com.example.thorium.db.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.sql.Timestamp
+
 const val CURRENT_ID = 0
 
 @Entity
 data class Status(
-    @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP", name = "timestamp")
-    var timestamp: String,
+    @ColumnInfo(name = "timestamp")
+    val timestamp: Long = System.currentTimeMillis(),
 
     @ColumnInfo(name = "latitude")
-    var latitude: Double ?= null,
+    var latitude: Double,
 
     @ColumnInfo(name = "longitude")
-    var longitude: Double ?= null,
+    var longitude: Double,
 
     @ColumnInfo(name = "cell_id")
     var cellID: String ?= null,
@@ -37,4 +37,8 @@ data class Status(
 ){
     @PrimaryKey(autoGenerate = false)
     var id : Int = CURRENT_ID
+
+    override fun toString(): String {
+        return "Cell ID: $cellID \n Network Generation: $netGen \n PLMN ID: $plmnID \n code: $code \n LAC or TAC: $ac \n ARFCN: $arfcn"
+    }
 }
