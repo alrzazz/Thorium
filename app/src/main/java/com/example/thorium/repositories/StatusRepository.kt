@@ -13,6 +13,6 @@ class StatusRepository(private val statusDao: StatusDao) {
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun insert(status: Status) {
-        statusDao.upsert(status)
+        statusDao.inpsert(status)
     }
 }

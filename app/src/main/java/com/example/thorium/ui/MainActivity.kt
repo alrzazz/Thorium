@@ -2,7 +2,6 @@ package com.example.thorium.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -10,7 +9,6 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.provider.SyncStateContract.Helpers.insert
 import android.telephony.*
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -18,15 +16,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.thorium.R
-import com.example.thorium.db.AppDatabase
 import com.example.thorium.db.entities.Status
-import com.example.thorium.repositories.StatusRepository
 import org.osmdroid.config.Configuration.getInstance
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import java.util.*
+import androidx.activity.viewModels
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,15 +55,15 @@ class MainActivity : AppCompatActivity() {
     private var telephonyManager: TelephonyManager ?= null
     private val LOCATION_TIME_INTERVAL:Long = 6000L // get gps location every 1 min
     private val LOCATION_DISTANCE:Float = 1000F // set the distance value in meter
-//    private val wordViewModel: StatusViewModel by viewModels {
-//        StatusViewModelFactory((application as StatusApplication).repository)
-//    }
+    private val statusViewModel: StatusViewModel by viewModels {
+        StatusViewModelFactory((application as StatusApplication).repository)
+    }
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
+        telephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager?
 
 
         getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
@@ -97,6 +94,12 @@ class MainActivity : AppCompatActivity() {
 //        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
         map.overlays.add(marker)
         map.invalidate()
+
+        statusViewModel.allStatus.observe(this) { allStatus ->
+            // Update the cached copy of the words in the adapter.
+//            allStatus.let { adapter.submitList(it) }
+            Log.d("aas",allStatus.toString())
+        }
     }
 
     override fun onResume() {
@@ -129,12 +132,12 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
     private fun getLocation(): Location? {
         var locationNetwork : Location? = null
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        if(ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED)
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(this,arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), 34)
+            ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 34)
         }
 
 
@@ -156,15 +159,15 @@ class MainActivity : AppCompatActivity() {
                 var telephonyInfo = getTelInfo()
                 Log.d("1", telephonyInfo.toString())
 
-//                StatusViewModel.insert(Status(
-//                    cellID = telephonyInfo["cellID"],
-//                    plmnID = telephonyInfo["plmnID"],
-//                    netGen = telephonyInfo["netGen"],
-//                    code = telephonyInfo["code"],
-//                    arfcn = telephonyInfo["arfcn"],
-//                    latitude = p0.latitude,
-//                    longitude = p0.longitude
-//                ))
+                statusViewModel.insert(Status(
+                    cellID = telephonyInfo["cellID"],
+                    plmnID = telephonyInfo["plmnID"],
+                    netGen = telephonyInfo["netGen"],
+                    code = telephonyInfo["code"],
+                    arfcn = telephonyInfo["arfcn"],
+                    latitude = p0.latitude,
+                    longitude = p0.longitude
+                ))
 
             }
         })
@@ -174,15 +177,15 @@ class MainActivity : AppCompatActivity() {
             locationNetwork = localNetworkLocation
             var telephonyInfo = getTelInfo()
             Log.d("1", telephonyInfo.toString())
-//                StatusViewModel.insert(Status(
-//                    cellID = telephonyInfo["cellID"],
-//                    plmnID = telephonyInfo["plmnID"],
-//                    netGen = telephonyInfo["netGen"],
-//                    code = telephonyInfo["code"],
-//                    arfcn = telephonyInfo["arfcn"],
-//                    latitude = p0.latitude,
-//                    longitude = p0.longitude
-//                ))
+                statusViewModel.insert(Status(
+                    cellID = telephonyInfo["cellID"],
+                    plmnID = telephonyInfo["plmnID"],
+                    netGen = telephonyInfo["netGen"],
+                    code = telephonyInfo["code"],
+                    arfcn = telephonyInfo["arfcn"],
+                    latitude = localNetworkLocation.latitude,
+                    longitude = localNetworkLocation.longitude
+                ))
         }
 
 
@@ -297,4 +300,6 @@ class MainActivity : AppCompatActivity() {
         }
         return teleInfo
     }
+
+
 }

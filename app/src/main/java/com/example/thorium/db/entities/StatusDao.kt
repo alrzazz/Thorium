@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface StatusDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun upsert(status: Status): Long
+    suspend fun inpsert(status: Status): Long
 
     @Query("SELECT * FROM status ORDER BY timestamp ASC;")
     fun getAll(): Flow<List<Status>>

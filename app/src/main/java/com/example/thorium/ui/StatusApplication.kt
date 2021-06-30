@@ -11,6 +11,6 @@ class StatusApplication : Application() {
 
     val applicationScope = CoroutineScope(SupervisorJob())
 
-    val database by lazy { AppDatabase.buildDatabase(this) }
+    val database by lazy { AppDatabase.getDatabase(this, applicationScope) }
     val repository by lazy { StatusRepository(database.getStatusDao()) }
 }
